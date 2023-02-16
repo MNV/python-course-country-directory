@@ -1,24 +1,22 @@
 """
-Тестирование функций клиента для получения информации о погоде.
+Тестирование функций клиента для получения информации о новостях.
 """
-
-
 import pytest
 
-from clients.weather import WeatherClient
-from settings import API_KEY_OPENWEATHER
+from clients.news import NewsClient
+from settings import API_KEY_NEWSAPI
 
 
-class TestClientWeather:
+class TestClientNews:
     """
     Тестирование клиента для получения информации о странах.
     """
 
-    base_url = "https://api.openweathermap.org/data/2.5/weather"
+    base_url = "https://newsapi.org/v2"
 
     @pytest.fixture
     def client(self):
-        return WeatherClient()
+        return NewsClient()
 
     @pytest.mark.asyncio
     async def test_get_base_url(self, client):
@@ -27,7 +25,7 @@ class TestClientWeather:
     @pytest.mark.asyncio
     async def test_get_countries(self, mocker, client):
         mocker.patch("clients.base.BaseClient._request")
-        await client.get_weather("test")
+        await client.get_news("ru")
         await client._request(
-            f"{self.base_url}?units=metric&q=test&appid={API_KEY_OPENWEATHER}"
+            f"{self.base_url}/top-headlines?country=ru&apiKey={API_KEY_NEWSAPI}"
         )
