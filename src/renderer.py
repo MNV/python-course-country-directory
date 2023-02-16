@@ -29,7 +29,7 @@ class Renderer:
 
         :param decimal: координата в числовом формате.
         :param direct: список координат направлений
-        :return: Координаты в формате (Градусы минтуы секунды)
+        :return: Координаты в формате (Градусы минуты секунды)
         """
         if decimal >= 0:
             direction = 0 if decimal != 0 else 2

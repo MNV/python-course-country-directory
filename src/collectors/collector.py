@@ -296,7 +296,7 @@ class NewsCollector(BaseCollector):
                     url=article["url"],
                     published_at=article["publishedAt"],
                 )
-                for article in result["articles"]
+                for article in result["articles"][:3]
             ]
         return None
 
