@@ -19,9 +19,11 @@ class TestClientCountry:
     def client(self):
         return CountryClient()
 
+    @pytest.mark.asyncio
     async def test_get_base_url(self, client):
         assert await client.get_base_url() == self.base_url
 
+    @pytest.mark.asyncio
     async def test_get_countries(self, mocker, client):
         mocker.patch("clients.country.CountryClient._request")
         await client.get_countries()

@@ -28,7 +28,6 @@ class CurrencyClient(BaseClient):
             async with session.get(endpoint, headers=headers) as response:
                 if response.status == HTTPStatus.OK:
                     return await response.json()
-
                 return None
 
     async def get_rates(self, base: str = "rub") -> Optional[dict]:
