@@ -16,7 +16,7 @@ class TestCollectorCapital:
     @pytest.mark.asyncio
     async def test_read_capital(self):
         """
-        Тестирование чтения информации о стране.
+        Тестирование получения информации о столице.
         """
         capital = await self.collector.collect("Moscow")
         assert capital is not None
