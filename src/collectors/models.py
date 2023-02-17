@@ -60,6 +60,28 @@ class LanguagesInfoDTO(HashableBaseModel):
     native_name: str
 
 
+class CapitalDTO(BaseModel):
+    """
+    Модель данных о столице.
+
+    .. code-block::
+
+        CapitalDTO(
+            name="Moscow",
+            longitude=55.75,
+            latitude=37.62,
+            timezone="Europe/Moscow",
+            current_time="22:33:51 on Thursday, February 16, 2023"
+        )
+    """
+
+    name: str
+    longitude: float | None
+    latitude: float | None
+    timezone: str | None
+    current_time: str | None
+
+
 class CountryDTO(BaseModel):
     """
     Модель данных о стране.
@@ -89,6 +111,7 @@ class CountryDTO(BaseModel):
             },
             name="\u00c5land Islands",
             population=28875,
+            area=17124442.0,
             subregion="Northern Europe",
             timezones=[
                 "UTC+02:00",
@@ -104,6 +127,7 @@ class CountryDTO(BaseModel):
     languages: set[LanguagesInfoDTO]
     name: str
     population: int
+    area: float | None
     subregion: str
     timezones: list[str]
 
@@ -140,6 +164,7 @@ class WeatherInfoDTO(BaseModel):
             humidity=54,
             wind_speed=4.63,
             description="scattered clouds",
+            visibility="3161.0"
         )
     """
 
@@ -148,6 +173,7 @@ class WeatherInfoDTO(BaseModel):
     humidity: int
     wind_speed: float
     description: str
+    visibility: float
 
 
 class LocationInfoDTO(BaseModel):
@@ -180,10 +206,18 @@ class LocationInfoDTO(BaseModel):
                 },
                 name="\u00c5land Islands",
                 population=28875,
+                area=17124442.0,
                 subregion="Northern Europe",
                 timezones=[
                     "UTC+02:00",
                 ],
+            ),
+            capital=CapitalDTO(
+                name="Moscow",
+                longitude=55.75,
+                latitude=37.62,
+                timezone="Europe/Moscow",
+                current_time="22:33:51 on Thursday, February 16, 2023"
             ),
             weather=WeatherInfoDTO(
                 temp=13.92,
@@ -199,5 +233,6 @@ class LocationInfoDTO(BaseModel):
     """
 
     location: CountryDTO
+    capital: CapitalDTO
     weather: WeatherInfoDTO
     currency_rates: dict[str, float]
