@@ -4,6 +4,8 @@
 
 from decimal import ROUND_HALF_UP, Decimal
 
+from prettytable import PrettyTable
+
 from collectors.models import LocationInfoDTO
 
 
@@ -21,21 +23,90 @@ class Renderer:
 
         self.location_info = location_info
 
-    async def render(self) -> tuple[str, ...]:
+    @staticmethod
+    def make_table(data: list, columns: list[str]) -> PrettyTable:
         """
-        Форматирование прочитанных данных.
+        Форматирование прочитанных данных о сущности.
+
+        :param data: Список строк для отображения.
+        :param columns: Список названий столбцов.
 
         :return: Результат форматирования
         """
+        table = PrettyTable(columns)
+        for row in data:
+            table.add_row(row)
+        return table
 
-        return (
-            f"Страна: {self.location_info.location.name}",
-            f"Столица: {self.location_info.location.capital}",
-            f"Регион: {self.location_info.location.subregion}",
-            f"Языки: {await self._format_languages()}",
-            f"Население страны: {await self._format_population()} чел.",
-            f"Курсы валют: {await self._format_currency_rates()}",
-            f"Погода: {self.location_info.weather.temp} °C",
+    async def render_country(self) -> PrettyTable:
+        """
+        Форматирование прочитанных данных о стране.
+
+        :return: Результат форматирования
+        """
+        location = self.location_info.location
+        data = [
+            (
+                location.name,
+                location.subregion,
+                await self._format_none(location.area),
+                await self._format_languages(),
+                await self._format_population(),
+                await self._format_currency_rates(),
+            )
+        ]
+        return self.make_table(
+            data,
+            [
+                "Страна",
+                "Регион",
+                "Площадь (кв. м.)",
+                "Языки",
+                "Население страны (чел.)",
+                "Курсы валют",
+            ],
+        )
+
+    async def render_capital(self) -> PrettyTable:
+        """
+        Форматирование прочитанных данных о столице.
+
+        :return: Результат форматирования
+        """
+        capital = self.location_info.capital
+        data = [
+            (
+                capital.name,
+                await self._format_none(capital.latitude),
+                await self._format_none(capital.longitude),
+                await self._format_none(capital.timezone),
+                await self._format_none(capital.current_time),
+            )
+        ]
+        return self.make_table(
+            data,
+            [
+                "Название столицы",
+                "Широта",
+                "Долгота",
+                "Часовой пояс",
+                "Текущее местное время",
+            ],
+        )
+
+    async def render_weather(self) -> PrettyTable:
+        """
+        Форматирование прочитанных данных о погоде.
+
+        :return: Результат форматирования
+        """
+        weather = self.location_info.weather
+        data = [
+            (weather.description, weather.temp, weather.visibility, weather.wind_speed)
+        ]
+        return self.make_table(
+            data,
+            ["Описание", "Температура (°C)", "Видимость (м)", "Скорость ветра (м/с)"],
         )
 
     async def _format_languages(self) -> str:
@@ -59,6 +130,15 @@ class Renderer:
 
         # pylint: disable=C0209
         return "{:,}".format(self.location_info.location.population).replace(",", ".")
+
+    async def _format_none(self, input_field: str | float | None) -> str | float:
+        """
+        Форматирование поля, которое может принимать значение None.
+
+        :return:
+        """
+
+        return input_field if not None else "Неизвестно"
 
     async def _format_currency_rates(self) -> str:
         """
