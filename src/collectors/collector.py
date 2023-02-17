@@ -1,16 +1,19 @@
 """
 Функции сбора информации о странах.
 """
-
 from __future__ import annotations
 
 import asyncio
 import json
+from datetime import datetime
 from typing import Any, Optional, FrozenSet
+
+from timezonefinder import TimezoneFinder
+from geopy.geocoders import Nominatim
 
 import aiofiles
 import aiofiles.os
-
+import pytz
 from clients.country import CountryClient
 from clients.currency import CurrencyClient
 from clients.weather import WeatherClient
@@ -18,6 +21,7 @@ from collectors.base import BaseCollector
 from collectors.models import (
     LocationDTO,
     CountryDTO,
+    CapitalDTO,
     CurrencyRatesDTO,
     CurrencyInfoDTO,
     WeatherInfoDTO,
@@ -101,6 +105,7 @@ class CountryCollector(BaseCollector):
                         languages=item["languages"],
                         name=item["name"],
                         population=item["population"],
+                        area=item["area"],
                         subregion=item["subregion"],
                         timezones=item["timezones"],
                     )
@@ -109,6 +114,77 @@ class CountryCollector(BaseCollector):
             return result_list
 
         return None
+
+
+class CapitalCollector:
+    """
+    Сбор информации о столице (географическое описание).
+    """
+
+    @classmethod
+    def get_timezone(
+        cls, latitude: float | None, longitude: float | None
+    ) -> str | None:
+        """
+        Получение часового пояса по координатам.
+
+        :param latitude: Широта
+        :param longitude: Долгота
+        :return: Часовой пояс или None, если не найден
+        """
+        if longitude is None or latitude is None:
+            return None
+        return TimezoneFinder().timezone_at(lng=longitude, lat=latitude)
+
+    @classmethod
+    async def get_coordinates(cls, city: str) -> tuple[float | None, float | None]:
+        """
+        Получение координат по названию столицы.
+
+        :param city: Название столицы
+        :return: Координаты или None, None, если не найдены
+        """
+        geolocator = Nominatim(user_agent="geoapiExercises")
+        location = geolocator.geocode(city)
+        if location is not None:
+            return location.latitude, location.longitude
+        return None, None
+
+    @classmethod
+    def capital_time(
+        cls, latitude: float | None, longitude: float | None
+    ) -> tuple[str | None, str | None]:
+        """
+        Получение часового пояса и текущего времени в столице по координатам.
+
+        :param latitude: Широта
+        :param longitude: Долгота
+        :return: Часовой пояс и текущее время или None, None, если не найдены
+        """
+        timezone_raw = cls.get_timezone(latitude, longitude)
+        if timezone_raw is None:
+            return None, None
+        timezone = pytz.timezone(timezone_raw)
+        time = datetime.now(timezone)
+        return timezone_raw, time.strftime("%H:%M:%S on %A, %B %d, %Y")
+
+    @classmethod
+    async def collect(cls, name: str) -> CapitalDTO:
+        """
+        Получение данных о столице в формате CapitalDTO.
+
+        :param name: Название столицы
+        :return: Модель столицы в формате CapitalDTO
+        """
+        latitude, longitude = await cls.get_coordinates(name)
+        timezone, current_time = cls.capital_time(latitude, longitude)
+        return CapitalDTO(
+            name=name,
+            latitude=latitude,
+            longitude=longitude,
+            timezone=timezone,
+            current_time=current_time,
+        )
 
 
 class CurrencyRatesCollector(BaseCollector):
@@ -217,6 +293,7 @@ class WeatherCollector(BaseCollector):
                 temp=result["main"]["temp"],
                 pressure=result["main"]["pressure"],
                 humidity=result["main"]["humidity"],
+                visibility=result["visibility"],
                 wind_speed=result["wind"]["speed"],
                 description=result["weather"][0]["description"],
             )
