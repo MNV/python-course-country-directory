@@ -1,9 +1,9 @@
 """
-Тестирование функций клиента для получения информации о погоде.
+Тестирование клиента для получения информации о новостях.
 """
 import pytest
 
-from clients.weather import WeatherClient
+from clients.news import NewsClient
 
 
 class TestClientCountry:
@@ -11,17 +11,17 @@ class TestClientCountry:
     Тестирование клиента для получения информации о странах.
     """
 
-    base_url = "https://api.openweathermap.org/data/2.5/weather"
+    base_url = "https://newsapi.org/v2/everything"
 
     @pytest.fixture
     def client(self):
-        return WeatherClient()
+        return NewsClient()
 
     async def test_get_base_url(self, client):
         assert await client.get_base_url() == self.base_url
 
     async def test_get_countries(self, mocker, client):
         mocker.patch("clients.base.BaseClient._request")
-        await client.get_weather("test")
-        client._request.assert_called_with(self.base_url)
+        await client.get_news("test")
+        client._request.assert_called_once_with(self.base_url)
         assert client.params["q"] == "test"

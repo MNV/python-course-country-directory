@@ -1,13 +1,7 @@
 """
 Функции для взаимодействия с внешним сервисом-провайдером данных о погоде.
 """
-from http import HTTPStatus
-from typing import Optional
-
-import aiohttp
-
 from clients.base import BaseClient
-from logger import trace_config
 from settings import API_KEY_OPENWEATHER
 
 
@@ -16,26 +10,17 @@ class WeatherClient(BaseClient):
     Реализация функций для взаимодействия с внешним сервисом-провайдером данных о погоде.
     """
 
+    params = {"appid": API_KEY_OPENWEATHER, "units": "metric"}
+
     async def get_base_url(self) -> str:
         return "https://api.openweathermap.org/data/2.5/weather"
 
-    async def _request(self, endpoint: str) -> Optional[dict]:
-
-        async with aiohttp.ClientSession(trace_configs=[trace_config]) as session:
-            async with session.get(endpoint) as response:
-                if response.status == HTTPStatus.OK:
-                    return await response.json()
-
-                return None
-
-    async def get_weather(self, location: str) -> Optional[dict]:
+    async def get_weather(self, location: str) -> dict | None:
         """
         Получение данных о погоде.
 
         :param location: Город и страна
         :return:
         """
-
-        return await self._request(
-            f"{await self.get_base_url()}?units=metric&q={location}&appid={API_KEY_OPENWEATHER}"
-        )
+        self.params["q"] = location
+        return await self._request(await self.get_base_url())
