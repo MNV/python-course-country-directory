@@ -3,6 +3,7 @@
 """
 
 from pydantic import Field, BaseModel
+from datetime import datetime
 
 
 class HashableBaseModel(BaseModel):
@@ -93,6 +94,7 @@ class CountryDTO(BaseModel):
             timezones=[
                 "UTC+02:00",
             ],
+            area=228,
         )
     """
 
@@ -105,6 +107,10 @@ class CountryDTO(BaseModel):
     name: str
     population: int
     subregion: str
+    timezones: list[str]
+    area: float | None
+    latitude: float | None
+    longitude: float | None
     timezones: list[str]
 
 
@@ -148,6 +154,9 @@ class WeatherInfoDTO(BaseModel):
     humidity: int
     wind_speed: float
     description: str
+    visibility: int
+    dt: datetime
+    timezone: int
 
 
 class LocationInfoDTO(BaseModel):

@@ -20,6 +20,7 @@ LOGGING_LEVEL: str = os.getenv("LOGGING_LEVEL", "INFO")
 # ключи для доступа к API
 API_KEY_APILAYER: Optional[str] = os.getenv("API_KEY_APILAYER")
 API_KEY_OPENWEATHER: Optional[str] = os.getenv("API_KEY_OPENWEATHER")
+API_KEY_NEWS: Optional[str] = os.getenv("API_KEY_NEWS")
 
 # время актуальности данных о странах (в секундах), по умолчанию – один год
 CACHE_TTL_COUNTRY: int = int(os.getenv("CACHE_TTL_COUNTRY", "31_536_000"))
