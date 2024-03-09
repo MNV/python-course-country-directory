@@ -28,14 +28,15 @@ class NewsClient(BaseClient):
 
                 return None
 
-    async def get_news(self, location: str) -> Optional[dict]:
+    async def get_news(self, location: str, news_count: int = 3) -> Optional[dict]:
         """
         Получение данных о новостях.
 
         :param location: Код страны (например: us, ru, ...)
+        :param news_count: Максимальное количество новостей
         :return:
         """
 
         return await self._request(
-            f"{await self.get_base_url()}?pageSize=3&page=1&country={location}&apiKey={API_KEY_NEWS}"
+            f"{await self.get_base_url()}?pageSize={news_count}&page=1&country={location}&apiKey={API_KEY_NEWS}"
         )
