@@ -14,6 +14,7 @@ import aiofiles.os
 from clients.country import CountryClient
 from clients.currency import CurrencyClient
 from clients.weather import WeatherClient
+from clients.news import NewsClient
 from collectors.base import BaseCollector
 from collectors.models import (
     LocationDTO,
@@ -21,12 +22,14 @@ from collectors.models import (
     CurrencyRatesDTO,
     CurrencyInfoDTO,
     WeatherInfoDTO,
+    CountryNewsDTO,
 )
 from settings import (
     MEDIA_PATH,
     CACHE_TTL_COUNTRY,
     CACHE_TTL_CURRENCY_RATES,
     CACHE_TTL_WEATHER,
+    CACHE_TTL_NEWS
 )
 
 
@@ -230,6 +233,76 @@ class WeatherCollector(BaseCollector):
         return None
 
 
+class NewsCollector(BaseCollector):
+    """
+    Сбор информации о новостях.
+    """
+
+    def __init__(self) -> None:
+        self.client = NewsClient()
+
+    @staticmethod
+    async def get_file_path(filename: str = "", **kwargs: Any) -> str:
+        return f"{MEDIA_PATH}/news/{filename}.json"
+
+    @staticmethod
+    async def get_cache_ttl() -> int:
+        return CACHE_TTL_NEWS
+
+    async def collect(
+        self, locations: FrozenSet[LocationDTO] = frozenset(), **kwargs: Any
+    ) -> None:
+
+        target_dir_path = f"{MEDIA_PATH}/news"
+        # если целевой директории еще не существует, то она создается
+        if not await aiofiles.os.path.exists(target_dir_path):
+            await aiofiles.os.mkdir(target_dir_path)
+
+        for location in locations:
+            filename = f"{location.alpha2code}".lower()
+            if await self.cache_invalid(filename=filename):
+                # если кэш уже невалиден, то актуализируем его
+                result = await self.client.get_news(
+                    f"{location.alpha2code}"
+                )
+                if result:
+                    result_str = json.dumps(result)
+                    async with aiofiles.open(
+                        await self.get_file_path(filename), mode="w"
+                    ) as file:
+                        await file.write(result_str)
+
+    @classmethod
+    async def read(cls, location: LocationDTO) -> Optional[list[CountryNewsDTO]]:
+        """
+        Чтение данных из кэша.
+
+        :param location:
+        :return:
+        """
+
+        filename = f"{location.alpha2code}".lower()
+        async with aiofiles.open(await cls.get_file_path(filename), mode="r") as file:
+            content = await file.read()
+
+        result = json.loads(content)
+        result_arr = []
+
+        if result:
+            for news_item in result:
+                result_arr.append(CountryNewsDTO(
+                        title=news_item["title"],
+                        description=news_item["description"],
+                        url=news_item["url"],
+                        published_at=news_item["publishedAt"],
+                    )
+                )
+
+            return result_arr
+
+        return None
+
+
 class Collectors:
     @staticmethod
     async def gather() -> tuple:
@@ -244,6 +317,7 @@ class Collectors:
         try:
             results = loop.run_until_complete(Collectors.gather())
             loop.run_until_complete(WeatherCollector().collect(results[1]))
+            loop.run_until_complete(NewsCollector().collect(results[1]))
             loop.run_until_complete(loop.shutdown_asyncgens())
 
         finally:

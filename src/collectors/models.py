@@ -163,6 +163,27 @@ class WeatherInfoDTO(BaseModel):
     dt: int
 
 
+class CountryNewsDTO(BaseModel):
+    """
+    Модель данных о новостях.
+
+    .. code-block::
+
+        CountryNewsDTO(
+            title="Fortnite was down all day Friday, but now the 'Myths & Mortals' update is here - The Verge"
+            description="Fortnite’s Chapter 5 Season 2 launch was unexpectedly delayed for extended server maintenance.
+                Now v29.00 is live with the “Myths & Mortals” theme."
+            url="https://www.theverge.com/2024/3/8/24094877/fortnite-down-outage-chapter-5-season-2-update-download""
+            published_at="2024-03-09T14:14:00Z"
+        )
+    """
+
+    title: str
+    description: str | None
+    url: str | None
+    published_at: str | None
+
+
 class LocationInfoDTO(BaseModel):
     """
     Модель данных для представления общей информации о месте.
@@ -214,3 +235,4 @@ class LocationInfoDTO(BaseModel):
     location: CountryDTO
     weather: WeatherInfoDTO
     currency_rates: dict[str, float]
+    news: list[CountryNewsDTO]

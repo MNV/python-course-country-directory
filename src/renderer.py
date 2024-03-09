@@ -81,6 +81,8 @@ class Renderer:
                           + " | " + capital_part[key] + " " * (max_val_length - len(capital_part[key]) + 2) + " |\n")
             result.append("|" + "-" * (max_key_length + max_val_length + 7) + "|\n")
 
+        result.append(f"\n\n{await self._format_news()}")
+
         return tuple(result)
 
     async def _format_languages(self) -> str:
@@ -119,7 +121,7 @@ class Renderer:
 
     async def _format_timezone(self) -> str:
         """
-        Форматирование информации о курсах валют.
+        Форматирование информации о часовом поясе.
 
         :return:
         """
@@ -130,3 +132,17 @@ class Renderer:
             base += "+"
 
         return base + f"{self.location_info.weather.timezone // 3600}"
+
+    async def _format_news(self) -> str:
+        """
+        Форматирование информации о новостях.
+
+        :return:
+        """
+
+        result = "Новости по данной стране\n"
+
+        for news_item in self.location_info.news:
+            result += f"{news_item.title}\n{news_item.description}\n{news_item.url}\n{news_item.published_at}\n\n"
+
+        return result
