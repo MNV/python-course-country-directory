@@ -3,15 +3,17 @@
 """
 
 from difflib import SequenceMatcher
-from typing import Optional
+from typing import List, Optional
 
 from collectors.collector import (
     CountryCollector,
     CurrencyRatesCollector,
+    NewsCollector,
     WeatherCollector,
 )
 from collectors.models import (
     CountryDTO,
+    CountryNewsDTO,
     CurrencyInfoDTO,
     LocationDTO,
     LocationInfoDTO,
@@ -38,11 +40,15 @@ class Reader:
                 LocationDTO(capital=country.capital, alpha2code=country.alpha2code)
             )
             currency_rates = await self.get_currency_rates(country.currencies)
+            news = await self.get_news(
+                LocationDTO(capital=country.capital, alpha2code=country.alpha2code)
+            )
 
             return LocationInfoDTO(
                 location=country,
                 weather=weather,
                 currency_rates=currency_rates,
+                news=news,
             )
 
         return None
@@ -74,6 +80,16 @@ class Reader:
         :return:
         """
         return await WeatherCollector.read(location=location)
+
+    @staticmethod
+    async def get_news(location: LocationDTO) -> Optional[List[CountryNewsDTO]]:
+        """
+        Получение данных о новостях.
+
+        :param location: Объект локации для получения данных
+        :return:
+        """
+        return await NewsCollector.read(location=location)
 
     async def find_country(self, search: str) -> Optional[CountryDTO]:
         """
