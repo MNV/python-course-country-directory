@@ -3,6 +3,7 @@
 """
 
 from pydantic import Field, BaseModel
+from typing import Optional
 
 
 class HashableBaseModel(BaseModel):
@@ -68,6 +69,8 @@ class CountryDTO(BaseModel):
 
         CountryDTO(
             capital="Mariehamn",
+            capital_latitude=60.116667,
+            capital_longitude=19.9,
             alpha2code="AX",
             alt_spellings=[
               "AX",
@@ -93,10 +96,13 @@ class CountryDTO(BaseModel):
             timezones=[
                 "UTC+02:00",
             ],
+            area=1580
         )
     """
 
     capital: str
+    capital_latitude: float
+    capital_longitude: float
     alpha2code: str
     alt_spellings: list[str]
     currencies: set[CurrencyInfoDTO]
@@ -106,6 +112,7 @@ class CountryDTO(BaseModel):
     population: int
     subregion: str
     timezones: list[str]
+    area: Optional[int]
 
 
 class CurrencyRatesDTO(BaseModel):
@@ -140,6 +147,9 @@ class WeatherInfoDTO(BaseModel):
             humidity=54,
             wind_speed=4.63,
             description="scattered clouds",
+            visibility=10000,
+            timezone=-21600,
+            dt=1709996768
         )
     """
 
@@ -148,6 +158,9 @@ class WeatherInfoDTO(BaseModel):
     humidity: int
     wind_speed: float
     description: str
+    visibility: int
+    timezone: int
+    dt: int
 
 
 class LocationInfoDTO(BaseModel):
