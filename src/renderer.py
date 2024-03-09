@@ -2,11 +2,10 @@
 Функции для формирования выходной информации.
 """
 
+import datetime as dt
 from decimal import ROUND_HALF_UP, Decimal
 
 from collectors.models import LocationInfoDTO
-
-import datetime as dt
 
 
 class Renderer:
@@ -29,6 +28,9 @@ class Renderer:
 
         :return: Результат форматирования
         """
+        time_with_timezone = (
+            self.location_info.weather.dt + self.location_info.weather.timezone
+        )
 
         country_part = {
             "Страна": f"{self.location_info.location.name}",
@@ -48,37 +50,62 @@ class Renderer:
             "Скорость ветра в столице": f"{self.location_info.weather.wind_speed} м/с",
             "Видимость в столице": f"{self.location_info.weather.visibility} м",
             "Часовой пояс столицы": f"{await self._format_timezone()}",
-            "Время в столице":
-                f"{dt.datetime.fromtimestamp(self.location_info.weather.dt + self.location_info.weather.timezone)}",
+            "Время в столице": f"{dt.datetime.fromtimestamp(time_with_timezone)}",
         }
 
         max_key_length, max_val_length = 0, 0
 
-        for key in country_part:
+        for key, val in country_part.items():
             max_key_length = max(max_key_length, len(key))
-            max_val_length = max(max_val_length, len(country_part[key]))
+            max_val_length = max(max_val_length, len(val))
 
-        for key in capital_part:
+        for key, val in capital_part.items():
             max_key_length = max(max_key_length, len(key))
-            max_val_length = max(max_val_length, len(capital_part[key]))
+            max_val_length = max(max_val_length, len(val))
 
-        country_part_header, capital_part_header = "Информация о стране", "Информация о столице"
-        result = ["_" * (max_key_length + max_val_length + 9) + "\n",
-                  "| " + country_part_header + " " * (max_key_length + max_val_length + 5 - len(country_part_header))
-                  + " |\n", "|" + "-" * (max_key_length + max_val_length + 7) + "|\n"]
+        country_part_header, capital_part_header = (
+            "Информация о стране",
+            "Информация о столице",
+        )
+        result = [
+            "_" * (max_key_length + max_val_length + 9) + "\n",
+            "| "
+            + country_part_header
+            + " " * (max_key_length + max_val_length + 5 - len(country_part_header))
+            + " |\n",
+            "|" + "-" * (max_key_length + max_val_length + 7) + "|\n",
+        ]
 
-        for key in country_part:
-            result.append("| " + key + " " * (max_key_length - len(key))
-                          + " | " + country_part[key] + " " * (max_val_length - len(country_part[key]) + 2) + " |\n")
+        for key, val in country_part.items():
+            result.append(
+                "| "
+                + key
+                + " " * (max_key_length - len(key))
+                + " | "
+                + val
+                + " " * (max_val_length - len(val) + 2)
+                + " |\n"
+            )
             result.append("|" + "-" * (max_key_length + max_val_length + 7) + "|\n")
 
-        result.append("| " + capital_part_header + " " * (max_key_length + max_val_length + 5 - len(capital_part_header))
-                      + " |\n")
+        result.append(
+            "| "
+            + capital_part_header
+            + " " * (max_key_length + max_val_length + 5 - len(capital_part_header))
+            + " |\n"
+        )
         result.append("|" + "-" * (max_key_length + max_val_length + 7) + "|\n")
 
-        for key in capital_part:
-            result.append("| " + key + " " * (max_key_length - len(key))
-                          + " | " + capital_part[key] + " " * (max_val_length - len(capital_part[key]) + 2) + " |\n")
+        for key, val in capital_part.items():
+            result.append(
+                "| "
+                + key
+                + " " * (max_key_length - len(key))
+                + " | "
+                + val
+                + " " * (max_val_length - len(val) + 2)
+                + " |\n"
+            )
             result.append("|" + "-" * (max_key_length + max_val_length + 7) + "|\n")
 
         result.append(f"\n\n{await self._format_news()}")

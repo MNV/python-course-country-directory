@@ -8,9 +8,7 @@ from collectors.models import (
     CountryDTO,
     CurrencyInfoDTO,
     LanguagesInfoDTO,
-    LocationDTO,
     LocationInfoDTO,
-    CountryNewsDTO,
     WeatherInfoDTO,
     CountryNewsDTO,
 )

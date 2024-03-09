@@ -3,21 +3,21 @@
 """
 
 from difflib import SequenceMatcher
-from typing import Optional
+from typing import List, Optional
 
 from collectors.collector import (
     CountryCollector,
     CurrencyRatesCollector,
-    WeatherCollector,
     NewsCollector,
+    WeatherCollector,
 )
 from collectors.models import (
     CountryDTO,
+    CountryNewsDTO,
     CurrencyInfoDTO,
     LocationDTO,
     LocationInfoDTO,
     WeatherInfoDTO,
-    CountryNewsDTO,
 )
 
 
@@ -48,7 +48,7 @@ class Reader:
                 location=country,
                 weather=weather,
                 currency_rates=currency_rates,
-                news=news
+                news=news,
             )
 
         return None
@@ -82,7 +82,7 @@ class Reader:
         return await WeatherCollector.read(location=location)
 
     @staticmethod
-    async def get_news(location: LocationDTO) -> Optional[CountryNewsDTO]:
+    async def get_news(location: LocationDTO) -> Optional[List[CountryNewsDTO]]:
         """
         Получение данных о новостях.
 

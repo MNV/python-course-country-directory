@@ -29,7 +29,7 @@ from settings import (
     CACHE_TTL_COUNTRY,
     CACHE_TTL_CURRENCY_RATES,
     CACHE_TTL_WEATHER,
-    CACHE_TTL_NEWS
+    CACHE_TTL_NEWS,
 )
 
 
@@ -262,9 +262,7 @@ class NewsCollector(BaseCollector):
             filename = f"{location.alpha2code}".lower()
             if await self.cache_invalid(filename=filename):
                 # если кэш уже невалиден, то актуализируем его
-                result = await self.client.get_news(
-                    f"{location.alpha2code}"
-                )
+                result = await self.client.get_news(f"{location.alpha2code}")
                 if result:
                     result_str = json.dumps(result)
                     async with aiofiles.open(
@@ -290,7 +288,8 @@ class NewsCollector(BaseCollector):
 
         if result:
             for news_item in result:
-                result_arr.append(CountryNewsDTO(
+                result_arr.append(
+                    CountryNewsDTO(
                         title=news_item["title"],
                         description=news_item["description"],
                         url=news_item["url"],
