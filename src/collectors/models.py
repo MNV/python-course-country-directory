@@ -3,6 +3,8 @@
 """
 
 from pydantic import Field, BaseModel
+from datetime import datetime
+from typing import Optional
 
 
 class HashableBaseModel(BaseModel):
@@ -93,6 +95,9 @@ class CountryDTO(BaseModel):
             timezones=[
                 "UTC+02:00",
             ],
+            area=1200.2
+            latitude=24.222142
+            longitude=19.9
         )
     """
 
@@ -106,6 +111,9 @@ class CountryDTO(BaseModel):
     population: int
     subregion: str
     timezones: list[str]
+    area: str
+    latitude: float
+    longitude: float
 
 
 class CurrencyRatesDTO(BaseModel):
@@ -140,6 +148,7 @@ class WeatherInfoDTO(BaseModel):
             humidity=54,
             wind_speed=4.63,
             description="scattered clouds",
+            visibility=10000
         )
     """
 
@@ -148,6 +157,42 @@ class WeatherInfoDTO(BaseModel):
     humidity: int
     wind_speed: float
     description: str
+    visibility: float
+
+
+class SingleNewsDTO(BaseModel):
+    """
+    Модель данных об одной новости.
+
+    .. code-block::
+
+        SingleNewsDTO(
+            title="Boeing whistleblower death compounds bad news for the company - The Washington Post",
+            description="A drumbeat of critiques and bad headlines have followed the storied American company for years."
+        )
+    """
+
+    title: str
+    description: Optional[str]
+
+
+class NewsInfoDTO(BaseModel):
+    """
+    Модель данных о новостях.
+
+    .. code-block::
+
+        NewsInfoDTO(
+            news=[
+                SingleNewsDTO(
+                    title="Boeing whistleblower death compounds bad news for the company - The Washington Post",
+                    description="A drumbeat of critiques and bad headlines have followed the storied American company for years."
+                )
+            ]
+        )
+    """
+
+    news: list[SingleNewsDTO]
 
 
 class LocationInfoDTO(BaseModel):
@@ -201,3 +246,5 @@ class LocationInfoDTO(BaseModel):
     location: CountryDTO
     weather: WeatherInfoDTO
     currency_rates: dict[str, float]
+    news: NewsInfoDTO
+    timestamp: datetime

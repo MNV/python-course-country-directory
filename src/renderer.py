@@ -2,7 +2,11 @@
 Функции для формирования выходной информации.
 """
 
+import re
+from datetime import timedelta
 from decimal import ROUND_HALF_UP, Decimal
+
+from tabulate import tabulate
 
 from collectors.models import LocationInfoDTO
 
@@ -28,15 +32,30 @@ class Renderer:
         :return: Результат форматирования
         """
 
-        return (
-            f"Страна: {self.location_info.location.name}",
-            f"Столица: {self.location_info.location.capital}",
-            f"Регион: {self.location_info.location.subregion}",
-            f"Языки: {await self._format_languages()}",
-            f"Население страны: {await self._format_population()} чел.",
-            f"Курсы валют: {await self._format_currency_rates()}",
-            f"Погода: {self.location_info.weather.temp} °C",
-        )
+        table = [
+            ["Страна:", self.location_info.location.name],
+            ["Столица:", self.location_info.location.capital],
+            ["Регион:", self.location_info.location.subregion],
+            ["Языки:", await self._format_languages()],
+            ["Население страны:", f"{await self._format_population()} чел."],
+            ["Курсы валют:", await self._format_currency_rates()],
+            ["Погода:", f"{self.location_info.weather.temp} °C"],
+            ["Описание погоды:", self.location_info.weather.description],
+            ["Скорость ветра:", self.location_info.weather.wind_speed],
+            ["Видимость:", self.location_info.weather.visibility],
+            ["Площадь:", f"{self.location_info.location.area} км^2"],
+            [
+                "Широта и долгота:",
+                f"({self.location_info.location.latitude}, {self.location_info.location.longitude})",
+            ],
+            [
+                "Местное время:",
+                f"{await self._format_time()} ({self.location_info.location.timezones[0]})",
+            ],
+            ["Новости:", await self._format_news()],
+        ]
+
+        return tabulate(table, ["Параметр", "Значение"], tablefmt="simple").split("\n")
 
     async def _format_languages(self) -> str:
         """
@@ -71,3 +90,45 @@ class Renderer:
             f"{currency} = {Decimal(rates).quantize(exp=Decimal('.01'), rounding=ROUND_HALF_UP)} руб."
             for currency, rates in self.location_info.currency_rates.items()
         )
+
+    async def _format_time(self) -> str:
+        """
+        Форматирование местного времени.
+
+        :return:
+        """
+
+        time = self.location_info.timestamp + await self._parse_tz(
+            self.location_info.location.timezones[0]
+        )
+        return time.strftime("%H:%M:%S")
+
+    async def _parse_tz(self, tzstr: str) -> timedelta:
+        p = re.compile("UTC([+-])(\d\d):(\d\d)")
+        m = p.search(tzstr)
+        tz_offset = timedelta(0)
+        if m:
+            sign = m.group(1)
+            try:
+                hs = m.group(2).lstrip("0")
+                ms = m.group(3).lstrip("0")
+            except:
+                return tz_offset
+
+            tz_offset = timedelta(
+                hours=int(hs) if hs else 0, minutes=int(ms) if ms else 0
+            )
+
+        return tz_offset
+
+    async def _format_news(self) -> str:
+        """
+        Форматирование новостей.
+
+        :return:
+        """
+        res = "\n"
+        for (i, newsDTO) in enumerate(self.location_info.news.news):
+            res += f"{i+1}) \"{newsDTO.title}\". {newsDTO.description if newsDTO.description is not None else ''}\n"
+
+        return res
