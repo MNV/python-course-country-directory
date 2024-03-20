@@ -4,6 +4,8 @@
 
 from pydantic import Field, BaseModel
 
+from datetime import datetime
+
 
 class HashableBaseModel(BaseModel):
     """
@@ -68,6 +70,8 @@ class CountryDTO(BaseModel):
 
         CountryDTO(
             capital="Mariehamn",
+            longitude=88.0,
+            latitude=88.0,
             alpha2code="AX",
             alt_spellings=[
               "AX",
@@ -81,6 +85,7 @@ class CountryDTO(BaseModel):
                 )
             },
             flag="http://assets.promptapi.com/flags/AX.svg",
+            area"=888888.0
             languages={
                 LanguagesInfoDTO(
                     name="Swedish",
@@ -93,19 +98,25 @@ class CountryDTO(BaseModel):
             timezones=[
                 "UTC+02:00",
             ],
+
         )
     """
 
     capital: str
+    longitude: float | None
+    latitude: float | None
     alpha2code: str
     alt_spellings: list[str]
     currencies: set[CurrencyInfoDTO]
     flag: str
+    area: float | None
     languages: set[LanguagesInfoDTO]
     name: str
     population: int
     subregion: str
     timezones: list[str]
+
+
 
 
 class CurrencyRatesDTO(BaseModel):
@@ -140,6 +151,9 @@ class WeatherInfoDTO(BaseModel):
             humidity=54,
             wind_speed=4.63,
             description="scattered clouds",
+            visibility = 10000,
+            offset_seconds = 3600
+
         )
     """
 
@@ -148,6 +162,9 @@ class WeatherInfoDTO(BaseModel):
     humidity: int
     wind_speed: float
     description: str
+    visibility: int
+    offset_seconds: int
+
 
 
 class LocationInfoDTO(BaseModel):
@@ -190,7 +207,8 @@ class LocationInfoDTO(BaseModel):
                 pressure=1023,
                 humidity=54,
                 wind_speed=4.63,
-                description="scattered clouds",
+                description="scattered clouds",c
+                offset_seconds=3600,
             ),
             currency_rates={
                 "EUR": 0.016503,

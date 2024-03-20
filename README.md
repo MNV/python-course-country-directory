@@ -32,6 +32,7 @@ Install the appropriate software:
 
     To access the API, visit the appropriate resources and obtain an access token:
     - APILayer – Geography API (https://apilayer.com/marketplace/geo-api)
+    - APILayer – Currency API (https://apilayer.com/marketplace/fixer-api)
     - OpenWeather – Weather Free Plan (https://openweathermap.org/price#weather)
    
     Set received access tokens as environment variable values (in `.env` file):

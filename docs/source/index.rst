@@ -58,6 +58,7 @@
 
     Чтобы получить доступ к API внешних систем, посетите соответствующие сервисы и получите токены доступа:
 
+    * APILayer – Currency API (https://apilayer.com/marketplace/fixer-api)
     * APILayer — Geography API (https://apilayer.com/marketplace/geo-api)
     * OpenWeather – Weather Free Plan (https://openweathermap.org/price#weather)
 
