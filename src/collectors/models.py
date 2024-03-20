@@ -3,7 +3,7 @@
 """
 
 from pydantic import Field, BaseModel
-
+from datetime import datetime
 
 class HashableBaseModel(BaseModel):
     """
@@ -12,6 +12,25 @@ class HashableBaseModel(BaseModel):
 
     def __hash__(self) -> int:
         return hash((type(self),) + tuple(self.__dict__.values()))
+
+class NewsInfoDTO(HashableBaseModel):
+    """
+    Модель данных о новостях.
+
+    .. code-block::
+
+        NewsInfoDTO(
+            source="BBC News",
+            title="Test",
+            description="Test description"
+            publishDate="2023-02-16 15:58"
+        )
+    """
+
+    source: str
+    title: str
+    description: str
+    publishDate: str
 
 
 class LocationDTO(HashableBaseModel):
@@ -106,6 +125,9 @@ class CountryDTO(BaseModel):
     population: int
     subregion: str
     timezones: list[str]
+    area: float | None
+    latitude: float | None
+    longitude: float | None
 
 
 class CurrencyRatesDTO(BaseModel):
@@ -140,6 +162,7 @@ class WeatherInfoDTO(BaseModel):
             humidity=54,
             wind_speed=4.63,
             description="scattered clouds",
+            visible=100
         )
     """
 
@@ -148,6 +171,9 @@ class WeatherInfoDTO(BaseModel):
     humidity: int
     wind_speed: float
     description: str
+    timezone: int
+    time: datetime
+    visible: int | None
 
 
 class LocationInfoDTO(BaseModel):
@@ -201,3 +227,4 @@ class LocationInfoDTO(BaseModel):
     location: CountryDTO
     weather: WeatherInfoDTO
     currency_rates: dict[str, float]
+    news: list[NewsInfoDTO]

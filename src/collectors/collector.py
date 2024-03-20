@@ -10,10 +10,12 @@ from typing import Any, Optional, FrozenSet
 
 import aiofiles
 import aiofiles.os
+from datetime import datetime
 
 from clients.country import CountryClient
 from clients.currency import CurrencyClient
 from clients.weather import WeatherClient
+from clients.news import NewsClient
 from collectors.base import BaseCollector
 from collectors.models import (
     LocationDTO,
@@ -21,13 +23,130 @@ from collectors.models import (
     CurrencyRatesDTO,
     CurrencyInfoDTO,
     WeatherInfoDTO,
+    NewsInfoDTO
 )
 from settings import (
     MEDIA_PATH,
     CACHE_TTL_COUNTRY,
     CACHE_TTL_CURRENCY_RATES,
     CACHE_TTL_WEATHER,
+    CACHE_TTL_NEWS
 )
+
+class NewsCollector(BaseCollector):
+    """
+    Сбор информации о новостях для стран.
+    """
+
+    def __init__(self) -> None:
+        self.client = NewsClient()
+
+    @staticmethod
+    async def get_file_path(filename: str = "", **kwargs: Any) -> str:
+        return f"{MEDIA_PATH}/news/{filename}.json"
+
+    @staticmethod
+    async def get_cache_ttl() -> int:
+        return CACHE_TTL_NEWS
+
+    async def collect(
+        self, locations: FrozenSet[LocationDTO] = frozenset(), **kwargs: Any
+    ) -> None:
+
+        target_dir_path = f"{MEDIA_PATH}/news"
+        # если целевой директории еще не существует, то она создается
+        if not await aiofiles.os.path.exists(target_dir_path):
+            await aiofiles.os.mkdir(target_dir_path)
+
+        for location in locations:
+            filename = f"{location.capital}_{location.alpha2code}".lower()
+            if await self.cache_invalid(filename=filename):
+                # если кэш уже невалиден, то актуализируем его
+                result = await self.client.get_news(f"{location.alpha2code}")
+                if result:
+                    result_str = json.dumps(result)
+                    async with aiofiles.open(
+                        await self.get_file_path(filename), mode="w"
+                    ) as file:
+                        await file.write(result_str)
+
+    @classmethod
+    async def read(cls, location: LocationDTO) -> list[NewsInfoDTO]:
+        """
+        Чтение данных из кэша.
+
+        :param location:
+        :return:
+        """
+
+        filename = f"{location.capital}_{location.alpha2code}".lower()
+        async with aiofiles.open(await cls.get_file_path(filename), mode="r") as file:
+            content = await file.read()
+
+        result = json.loads(content)
+        if result:
+            if result["totalResults"] > 0:
+                articles = list()
+                for i in range(3):
+                    if result["articles"][i]["source"]["name"] is None:
+                        source = "Неизвестный"
+                    else:
+                        source = result["articles"][i]["source"]["name"]
+
+                    if result["articles"][i]["title"] is None:
+                        title = "Неизвестный"
+                    else:
+                        title = result["articles"][i]["title"]
+
+                    articles.append(
+                        NewsInfoDTO(
+                            source=source,
+                            title=title,
+                            description=result["articles"][i]["description"],
+                            publishDate=datetime.strptime(
+                                result["articles"][i]["publishedAt"],
+                                "%Y-%m-%dT%H:%M:%SZ",
+                            ).strftime("%Y-%m-%d %H:%M"),
+                        )
+                    )
+                return articles
+
+        return None
+    """
+    Сбор информации о новостях стран.
+    """
+
+    def __init__(self) -> None:
+        self.client = NewsClient()
+
+    @staticmethod
+    async def get_file_path(filename: str = "", **kwargs: Any) -> str:
+        return f"{MEDIA_PATH}/news/{filename}.json"
+
+    @staticmethod
+    async def get_cache_ttl() -> int:
+        return CACHE_TTL_NEWS
+
+    async def collect(
+        self, locations: FrozenSet[LocationDTO] = frozenset(), **kwargs: Any
+    ) -> None:
+
+        target_dir_path = f"{MEDIA_PATH}/news"
+        # если целевой директории еще не существует, то она создается
+        if not await aiofiles.os.path.exists(target_dir_path):
+            await aiofiles.os.mkdir(target_dir_path)
+
+        for location in locations:
+            filename = f"{location.capital}_{location.alpha2code}".lower()
+            if await self.cache_invalid(filename=filename):
+                # если кэш уже невалиден, то актуализируем его
+                result = await self.client.get_news(f"{location.alpha2code}")
+                if result:
+                    result_str = json.dumps(result)
+                    async with aiofiles.open(
+                        await self.get_file_path(filename), mode="w"
+                    ) as file:
+                        await file.write(result_str)
 
 
 class CountryCollector(BaseCollector):
@@ -103,6 +222,9 @@ class CountryCollector(BaseCollector):
                         population=item["population"],
                         subregion=item["subregion"],
                         timezones=item["timezones"],
+                        area=item["area"],
+                        latitude=item["latitude"],
+                        longitude=item["longitude"],
                     )
                 )
 
@@ -219,6 +341,9 @@ class WeatherCollector(BaseCollector):
                 humidity=result["main"]["humidity"],
                 wind_speed=result["wind"]["speed"],
                 description=result["weather"][0]["description"],
+                visible=result["visibility"] if (result["visibility"] is not None) else 0,
+                timezone=result["timezone"] // 3600,
+                time=result["dt"]
             )
 
         return None
@@ -238,6 +363,7 @@ class Collectors:
         try:
             results = loop.run_until_complete(Collectors.gather())
             loop.run_until_complete(WeatherCollector().collect(results[1]))
+            loop.run_until_complete(NewsCollector().collect(results[1]))
             loop.run_until_complete(loop.shutdown_asyncgens())
 
         finally:
