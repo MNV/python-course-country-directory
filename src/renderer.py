@@ -1,7 +1,7 @@
 """
 Функции для формирования выходной информации.
 """
-
+import datetime
 from decimal import ROUND_HALF_UP, Decimal
 
 from collectors.models import LocationInfoDTO
@@ -27,16 +27,39 @@ class Renderer:
 
         :return: Результат форматирования
         """
+        render_information_country = {
+            "Страна": self.location_info.location.name,
+            "Площадь": self.location_info.location.area,
+            "Регион": self.location_info.location.subregion,
+            "Языки": await self._format_languages(),
+            "Население страны": await self._format_population(),
+            "Курсы валют": await self._format_currency_rates(),
 
-        return (
-            f"Страна: {self.location_info.location.name}",
-            f"Столица: {self.location_info.location.capital}",
-            f"Регион: {self.location_info.location.subregion}",
-            f"Языки: {await self._format_languages()}",
-            f"Население страны: {await self._format_population()} чел.",
-            f"Курсы валют: {await self._format_currency_rates()}",
-            f"Погода: {self.location_info.weather.temp} °C",
-        )
+            "Столица": self.location_info.location.capital,
+            "Широта": self.location_info.location.latitude,
+            "Долгота": self.location_info.location.longitude,
+
+            "Погода": self.location_info.weather.temp,
+            "Время": await self._format_current_time(),
+            "Часовой пояс": await self._get_timezone(),
+            "Описание погоды": self.location_info.weather.description,
+            "Видимость": self.location_info.weather.visibility,
+            "Влажность": self.location_info.weather.humidity,
+            "Скорость ветра": self.location_info.weather.wind_speed,
+            "Давление": self.location_info.weather.pressure,
+        }
+
+        first_column_width = max(len(key) for key in render_information_country) + 1
+        second_column_width = max(len(str(value)) for value in render_information_country.values()) + 1
+        formatted_render_information_country = [("-" * (first_column_width + second_column_width + 3))]
+        formatted_render_information_country.extend(
+            [
+                f"|{key:<{first_column_width}}|{value:>{second_column_width}}|"
+                for key, value in render_information_country.items()
+            ])
+        formatted_render_information_country.append("-" * (first_column_width + second_column_width + 3))
+
+        return tuple(formatted_render_information_country)
 
     async def _format_languages(self) -> str:
         """
@@ -49,6 +72,25 @@ class Renderer:
             f"{item.name} ({item.native_name})"
             for item in self.location_info.location.languages
         )
+
+    async def _get_timezone(self) -> str:
+        """
+        Форматирование информации о времени.
+
+        :return:
+        """
+        offset_hours = self.location_info.weather.offset_seconds / 3600.0
+        return "UTC{:+d}:{:02d}".format(int(offset_hours), int((offset_hours % 1) * 60))
+
+    async def _format_current_time(self) -> str:
+        """
+        Форматирование информации о времени.
+        :return:
+        """
+
+        render_time=datetime.datetime.now() + datetime.timedelta(
+            seconds=self.location_info.weather.offset_seconds)
+        return render_time.strftime("%X, %x")
 
     async def _format_population(self) -> str:
         """

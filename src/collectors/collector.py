@@ -91,6 +91,8 @@ class CountryCollector(BaseCollector):
                 result_list.append(
                     CountryDTO(
                         capital=item["capital"],
+                        longitude=item["longitude"],
+                        latitude=item["latitude"],
                         alpha2code=item["alpha2code"],
                         alt_spellings=item["alt_spellings"],
                         currencies={
@@ -103,6 +105,7 @@ class CountryCollector(BaseCollector):
                         population=item["population"],
                         subregion=item["subregion"],
                         timezones=item["timezones"],
+                        area=item["area"],
                     )
                 )
 
@@ -204,7 +207,7 @@ class WeatherCollector(BaseCollector):
         Чтение данных из кэша.
 
         :param location:
-        :return:
+        :return: Погода
         """
 
         filename = f"{location.capital}_{location.alpha2code}".lower()
@@ -219,6 +222,8 @@ class WeatherCollector(BaseCollector):
                 humidity=result["main"]["humidity"],
                 wind_speed=result["wind"]["speed"],
                 description=result["weather"][0]["description"],
+                visibility=result["visibility"],
+                offset_seconds=result["timezone"],
             )
 
         return None
