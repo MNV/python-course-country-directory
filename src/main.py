@@ -26,10 +26,18 @@ async def process_input(location: str) -> None:
 
     location_info = await Reader().find(location)
     if location_info:
-        lines = await Renderer(location_info).render()
-
-        for line in lines:
+        renderer = Renderer(location_info)
+        table, tableNews = await renderer.render()
+        
+        # Разделение таблицы на строки по переносам строк
+        table_lines = table.split('\n')
+        
+        for line in table_lines:
             click.secho(line, fg="green")
+        table_lines_news = tableNews.split('\n')
+        for line in table_lines_news:
+            click.secho(line, fg="green")
+        
     else:
         click.secho("Информация отсутствует.", fg="yellow")
 

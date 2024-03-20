@@ -5,6 +5,7 @@
 from decimal import ROUND_HALF_UP, Decimal
 
 from collectors.models import LocationInfoDTO
+from tabulate import tabulate
 
 
 class Renderer:
@@ -27,16 +28,31 @@ class Renderer:
 
         :return: Результат форматирования
         """
+        data = [
+            ["Страна", self.location_info.location.name],
+            ["Столица", self.location_info.location.capital],
+            ["Регион", self.location_info.location.subregion],
+            ["Языки", await self._format_languages()],
+            ["Население страны", f"{await self._format_population()} чел."],
+            ["Курсы валют", await self._format_currency_rates()],
+            ["Площадь страны", f"{self.location_info.location.area} км^2"],
+            ["", ""],
+            ["Температура", self.location_info.weather.temp],
+            ["Описание", self.location_info.weather.description],
+            ["Скорость ветра", self.location_info.weather.wind_speed],
+            ["Видимость", self.location_info.weather.visible],
+            ["Часовой пояс (UTC)", self.location_info.weather.timezone],
+            ["Время", self.location_info.weather.time],
+        ]
+        table = tabulate(data, headers=["Характеристика", "Значение"], tablefmt="pretty")
 
-        return (
-            f"Страна: {self.location_info.location.name}",
-            f"Столица: {self.location_info.location.capital}",
-            f"Регион: {self.location_info.location.subregion}",
-            f"Языки: {await self._format_languages()}",
-            f"Население страны: {await self._format_population()} чел.",
-            f"Курсы валют: {await self._format_currency_rates()}",
-            f"Погода: {self.location_info.weather.temp} °C",
-        )
+        dataNews = []
+        for i in self.location_info.news:
+            news = [i.source, i.title, i.publishDate]
+            dataNews.append(news)
+        tableNews = tabulate(dataNews, headers=["Источник", "Заголовок", "Дата"], tablefmt="pretty")
+
+        return table, tableNews
 
     async def _format_languages(self) -> str:
         """
